@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/mvc
+	      http://www.springframework.org/schema/mvc/spring-mvc.xsd
+	      http://www.springframework.org/schema/util 
+	      http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+
+
+	<context:component-scan base-package="com.bharti" />
+
+	<!-- THIS CONFIGURATION IS USED FOR @Transaction AND @PrsistenceContext 
+		ANNOTATIONS -->
+
+	<bean id="entityManager"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+
+
+		<property name="packagesToScan" value="com.bharti" />
+		<property name="persistenceUnitName" value="mongoPersistenceUnit" />
+		<property name="persistenceProviderClass"
+			value="org.hibernate.ogm.jpa.HibernateOgmPersistence" />
+		<property name="jpaPropertyMap">
+			<map>
+				<entry key="hibernate.search.Rules.directory_provider" value="ram" />
+				<entry key="javax.persistence.transactionType" value="resource_local" />
+				<entry key="hibernate.ogm.datastore.provider"
+					value="org.hibernate.ogm.datastore.mongodb.impl.MongoDBDatastoreProvider" />
+				<entry key="hibernate.ogm.datastore.database" value="testDB" />
+				<entry key="hibernate.ogm.datastore.host" value="localhost" />
+				<entry key="hibernate.ogm.datastore.port" value="27017" />
+				<entry key="hibernate.ogm.datastore.create_database" value="true" />
+			</map>
+		</property>
+	</bean>
+
+
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManager"></property>
+	</bean>
+
+
+	<tx:annotation-driven />
+
+	<!-- THIS CONFIGURATION IS USED TO CONVERT OBJECT TO JSON AND JSON TO OBJECT. 
+		(USED IN CONTROLLER WHEN IT RETURN STUDENT OR GET STUDENT ) -->
+
+
+	<bean name="jacksonObjectMapper"
+		class="org.springframework.http.converter.json.Jackson2ObjectMapperFactoryBean">
+		<property name="featuresToDisable">
+			<array>
+				<util:constant
+					static-field="com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS" />
+			</array>
+		</property>
+	</bean>
+	<mvc:annotation-driven>
+		<mvc:message-converters register-defaults="true">
+			<bean
+				class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+				<property name="objectMapper" ref="jacksonObjectMapper" />
+			</bean>
+		</mvc:message-converters>
+	</mvc:annotation-driven>
+</beans>
